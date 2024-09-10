@@ -7,8 +7,8 @@ soi_load = pd.read_csv('data/enso/daily_soi.txt', delim_whitespace=True, header=
 soi_load.drop(columns=['Tahiti', 'Darwin'], inplace=True)
 
 #join the Year and Day columns to create a new column 'date' in datetime format
-soi_load['date'] = soi_load['Year'].astype(str) + ' ' + soi_load['Day'].astype(str)
-soi_load['date'] = pd.to_datetime(soi_load['date'], format='%Y %j')
+soi_load['DATETIME'] = soi_load['Year'].astype(str) + ' ' + soi_load['Day'].astype(str)
+soi_load['DATETIME'] = pd.to_datetime(soi_load['DATETIME'], format='%Y %j')
 
 #create a three-month rolling average of the 'SOI' column and save it as a new column 'soi_3m_avg'
 soi_load['soi_3m_avg'] = soi_load['SOI'].rolling(window=90).mean()
@@ -26,7 +26,10 @@ soi_load[['nino', 'nina', 'enso']] = soi_load['soi_3m_avg'].apply(lambda x: pd.S
 soi_load.drop(columns=['Year', 'Day', 'soi_3m_avg', 'nino', 'nina'], inplace=True)
 
 #delete all rows before 2009-12-31
-soi_load = soi_load[soi_load['date'] >= '2009-12-31']
+soi_load = soi_load[soi_load['DATETIME'] >= '2009-12-31']
+
+#make the DATETIME column the index
+soi_load.set_index('DATETIME', inplace=True)
 
 #save the file as daily_soi_load.csv
-soi_load.to_csv('data/enso/daily_enso.csv', index=False)
+soi_load.to_csv('data/enso/daily_enso.csv')
