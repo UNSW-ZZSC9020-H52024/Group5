@@ -1,3 +1,4 @@
+
 import pandas as pd
 
 def fix_24_hour_time(df):
@@ -18,7 +19,7 @@ def fix_24_hour_time(df):
     
     return df
 
-def aggregate_temperature_data(input_csv, output_csv):
+def aggregate_humidity_data(input_csv, output_csv):
     # Load the merged CSV file
     df = pd.read_csv(input_csv)
 
@@ -29,17 +30,17 @@ def aggregate_temperature_data(input_csv, output_csv):
     # Fix any instances where Time is "24:00"
     df = fix_24_hour_time(df)
 
-    # Select only the temperature columns (assuming temperature columns have 'TEMP' in their name)
-    temp_columns = [col for col in df.columns if 'TEMP' in col]
+    # Select only the humidity columns (assuming humidity columns have 'HUMIDITY' in their name)
+    humidity_columns = [col for col in df.columns if 'HUMID' in col]
 
-    # Calculate mean and median across all temperature columns for each row
-    df['mean_temp'] = df[temp_columns].mean(axis=1)
-    df['median_temp'] = df[temp_columns].median(axis=1)
+    # Calculate mean and median across all humidity columns for each row
+    df['mean_humidity'] = df[humidity_columns].mean(axis=1)
+    df['median_humidity'] = df[humidity_columns].median(axis=1)
 
     # Group by 'Date' and 'Time' to calculate mean and median for unique combinations of Date and Time
     aggregated_df = df.groupby(['Date', 'Time']).agg({
-        'mean_temp': 'mean',
-        'median_temp': 'median'
+        'mean_humidity': 'mean',
+        'median_humidity': 'median'
     }).reset_index()
 
     # Save the result to a new CSV
@@ -48,11 +49,11 @@ def aggregate_temperature_data(input_csv, output_csv):
     print(f'Aggregated data saved to {output_csv}')
 
 
-# Path to the merged CSV file
-input_csv = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/src/merged_temperature_data.csv'
+# Path to the merged CSV file for humidity
+input_csv = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/src/merged_relative_humidity_data.csv'
 
 # Path to save the aggregated CSV
-output_csv = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/src/aggregated_temperature_data.csv'
+output_csv = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/src/aggregated_humidity_data.csv'
 
-# Call the function to aggregate the temperature data
-aggregate_temperature_data(input_csv, output_csv)
+# Call the function to aggregate the humidity data
+aggregate_humidity_data(input_csv, output_csv)
