@@ -1,12 +1,15 @@
+#This file opens and cleans the daily_soi.txt and nino_3.4.txt files then joins them on the date
+#It then creates a new column 'enso' that is 1 for el nino, -1 for la nina, and 0 for enso neutral based on the BoM criteria ()
+
 import pandas as pd
 
-#Load daily_soi.txt as a pandas dataframe with the first row as the header
+#Load daily_soi.txt as a DataFrame
 soi_load = pd.read_csv('data/enso/daily_soi.txt', delim_whitespace=True, header=0)
 
 #drop the Tahiti and Darwin columns
 soi_load.drop(columns=['Tahiti', 'Darwin'], inplace=True)
 
-#join the Year and Day columns to create a new column 'date' in datetime format
+#join the Year and Day columns
 soi_load['DATETIME'] = soi_load['Year'].astype(str) + ' ' + soi_load['Day'].astype(str)
 soi_load['DATETIME'] = pd.to_datetime(soi_load['DATETIME'], format='%Y %j')
 
