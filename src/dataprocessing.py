@@ -36,5 +36,5 @@ def convert_xls_to_csv(folder_path):
                     print(f'Failed to convert {file}. Error: {e}')
 
 # Replace 'your_directory_path' with the path to your directory containing .xls files
-folder_path = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/data/NSW/Hourly_weather_data/RH'
+folder_path = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/data/NSW/Hourly_weather_data/WDR'
 convert_xls_to_csv(folder_path)
