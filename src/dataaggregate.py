@@ -31,16 +31,16 @@ def aggregate_humidity_data(input_csv, output_csv):
     df = fix_24_hour_time(df)
 
     # Select only the humidity columns (assuming humidity columns have 'HUMIDITY' in their name)
-    humidity_columns = [col for col in df.columns if 'HUMID' in col]
+    humidity_columns = [col for col in df.columns if 'WSP' in col]
 
     # Calculate mean and median across all humidity columns for each row
-    df['mean_humidity'] = df[humidity_columns].mean(axis=1)
-    df['median_humidity'] = df[humidity_columns].median(axis=1)
+    df['mean_windspeed'] = df[humidity_columns].mean(axis=1)
+    df['median_windspeed'] = df[humidity_columns].median(axis=1)
 
     # Group by 'Date' and 'Time' to calculate mean and median for unique combinations of Date and Time
     aggregated_df = df.groupby(['Date', 'Time']).agg({
-        'mean_humidity': 'mean',
-        'median_humidity': 'median'
+        'mean_windspeed': 'mean',
+        'median_windspeed': 'median'
     }).reset_index()
 
     # Save the result to a new CSV
@@ -50,10 +50,10 @@ def aggregate_humidity_data(input_csv, output_csv):
 
 
 # Path to the merged CSV file for humidity
-input_csv = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/src/merged_relative_humidity_data.csv'
+input_csv = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/src/merged_windspeed_data.csv'
 
 # Path to save the aggregated CSV
-output_csv = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/src/aggregated_humidity_data.csv'
+output_csv = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/src/aggregated_windspeed_data.csv'
 
 # Call the function to aggregate the humidity data
 aggregate_humidity_data(input_csv, output_csv)

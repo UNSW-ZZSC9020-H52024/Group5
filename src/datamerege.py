@@ -1,10 +1,7 @@
-
-
-#================
 import os
 import pandas as pd
 
-def merge_relative_humidity_data(folder_path):
+def merge_windspeed_data(folder_path):
     # Initialize an empty DataFrame to store the merged data
     merged_df = pd.DataFrame()
 
@@ -26,18 +23,18 @@ def merge_relative_humidity_data(folder_path):
                     temp_df.columns = temp_df.iloc[1]  # Set second row as headers
                     temp_df = temp_df.drop([0, 1]).reset_index(drop=True)  # Remove first two rows
 
-                    # Rename columns for relative humidity data (assuming the third column holds the humidity data)
-                    humidity_column_name = temp_df.columns[2]  # Keep the original humidity column name
-                    temp_df = temp_df.rename(columns={temp_df.columns[0]: "Date", temp_df.columns[1]: "Time", temp_df.columns[2]: f"{humidity_column_name}_{location_name}"})
+                    # Rename columns for windspeed data (assuming the third column holds the windspeed data)
+                    windspeed_column_name = temp_df.columns[2]  # Keep the original windspeed column name
+                    temp_df = temp_df.rename(columns={temp_df.columns[0]: "Date", temp_df.columns[1]: "Time", temp_df.columns[2]: f"{windspeed_column_name}_{location_name}"})
 
                     # If merged_df is empty, initialize it with Date and Time
                     if merged_df.empty:
-                        merged_df = temp_df[['Date', 'Time', f'{humidity_column_name}_{location_name}']]
+                        merged_df = temp_df[['Date', 'Time', f'{windspeed_column_name}_{location_name}']]
                     else:
                         # Check if the column for the location already exists in the merged_df
-                        if f'{humidity_column_name}_{location_name}' not in merged_df.columns:
+                        if f'{windspeed_column_name}_{location_name}' not in merged_df.columns:
                             # Merge on Date and Time if the location does not exist
-                            merged_df = pd.merge(merged_df, temp_df[['Date', 'Time', f'{humidity_column_name}_{location_name}']], on=['Date', 'Time'], how='outer')
+                            merged_df = pd.merge(merged_df, temp_df[['Date', 'Time', f'{windspeed_column_name}_{location_name}']], on=['Date', 'Time'], how='outer')
                         else:
                             # If the location already exists, append only the new data
                             merged_df.update(temp_df.set_index(['Date', 'Time']))
@@ -47,13 +44,14 @@ def merge_relative_humidity_data(folder_path):
     
     return merged_df
 
-# Path to the folder containing the relative humidity CSV files
-folder_path = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/data/NSW/Hourly_weather_data/RH/csv'
+# Path to the folder containing the windspeed CSV files
+folder_path = 'C:/Users/Manoj/Documents/GitHub/ZZSC9020 H52024/Group5_1/data/NSW/Hourly_weather_data/WSP/csv'
 
-# Call the function to merge relative humidity data
-merged_data = merge_relative_humidity_data(folder_path)
+# Call the function to merge windspeed data
+merged_data = merge_windspeed_data(folder_path)
 
 # Save the merged data to a new CSV
-merged_data.to_csv('merged_relative_humidity_data.csv', index=False)
+merged_data.to_csv('merged_windspeed_data.csv', index=False)
 
-print("Merging completed. Data saved to 'merged_relative_humidity_data.csv'")
+print("Merging completed. Data saved to 'merged_windspeed_data.csv'")
+
