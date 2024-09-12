@@ -73,5 +73,8 @@ join = pd.merge(join, rain, on='Date', how='left')
 #join = pd.merge(join, pop, on='Date', how='left')
 join = pd.merge(join, demand, on='Date', how='left')
 
+#drop missing values
+join = join.dropna()
+
 #save as data_for_ml.csv
 join.to_csv('data/NSW/data_for_ml.csv', index=False)
