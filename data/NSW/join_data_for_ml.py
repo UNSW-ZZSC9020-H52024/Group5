@@ -48,7 +48,7 @@ rain.rename(columns={'Rainfall amount (millimetres)':'rainfall'}, inplace=True)
 rain = rain.sort_values(by='Date', ascending=True)
 
 #pop
-pop = pd.read_csv('data/Population/yearly_pop_nsw.csv', header=0)
+pop = pd.read_csv('data/Population/daily_pop_nsw.csv', header=0)
 pop['Date'] = pd.to_datetime(pop['Date'])
 pop = pop.sort_values(by='Date', ascending=True)
 #can someone help with deciding what to do with the population data? I'm not sure whether to model it as the same pop every day or to interpolate it for July 1st each year
@@ -58,7 +58,7 @@ demand = pd.read_csv('data/NSW/totaldemand_nsw.csv', header=0)
 demand['Date'] = pd.to_datetime(demand['DATETIME'], dayfirst=True)
 demand['Date'] = demand['Date'].dt.date
 demand['Date'] = pd.to_datetime(demand['Date'])
-demand.drop(columns=['DATETIME','REGIONID'], inplace=True)
+demand.drop(columns=['DATETIME'], inplace=True)
 demand = demand.groupby('Date').mean()
 demand = demand.sort_values(by='Date', ascending=True)
 
@@ -70,7 +70,7 @@ join = pd.merge(join, temp, on='Date', how='left')
 join = pd.merge(join, windtheta, on='Date', how='left')
 join = pd.merge(join, windspeed, on='Date', how='left')
 join = pd.merge(join, rain, on='Date', how='left')
-#join = pd.merge(join, pop, on='Date', how='left')
+join = pd.merge(join, pop, on='Date', how='left')
 join = pd.merge(join, demand, on='Date', how='left')
 
 #drop missing values
