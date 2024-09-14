@@ -1,178 +1,137 @@
 # -*- coding: utf-8 -*-
 """
-Enhanced Energy Demand Prediction Model (Linear Regression with Dask and Persisting Intermediate Results)
+Energy Demand Prediction Model (Linear Regression with PyTorch, Tuned)
 
 Author: Manoj
 """
 
-import dask.dataframe as dd
-from dask.distributed import Client, LocalCluster
 import pandas as pd
-import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 import os
 
-# Step 1: Setup Dask Client with Memory Limits
-cluster = LocalCluster(memory_limit='16GB')  # Adjust memory limit as needed
-client = Client(cluster)
-print(f"Connected to Dask cluster: {client}")
+# Step 1: Load Preprocessed Data
+data_path = '../data/NSW/data_for_ml.csv'  # Update the path based on your file
+preprocessed_data = pd.read_csv(data_path)
 
-# Step 2: Define helper functions for loading, filtering, and persisting data
-def load_and_filter_data_dask(file_path, columns, date_col, start_date='2010-01-01', end_date='2021-03-18'):
-    """Load only necessary columns, filter by date, and convert numeric columns to float32 using Dask."""
-    df = dd.read_csv(file_path, usecols=columns, assume_missing=True)
-    df[date_col] = dd.to_datetime(df[date_col], errors='coerce', dayfirst=True)
-    df = df[(df[date_col] >= start_date) & (df[date_col] <= end_date)]
-    
-    # Persist intermediate data to disk
-    output_file = f'./persisted_{os.path.basename(file_path)}.parquet'
-    df = df.astype({col: np.float32 for col in df.select_dtypes(include=[np.number]).columns})
-    df = df.persist()
-    df.to_parquet(output_file, overwrite=True)
-    
-    return df
+# Step 2: Check for missing or infinite values in the dataset
+def check_data_issues(data, columns):
+    for col in columns:
+        print(f"Checking column: {col}")
+        missing_vals = data[col].isnull().sum()
+        infinite_vals = np.isinf(data[col]).sum()
+        print(f"Missing values: {missing_vals}, Infinite values: {infinite_vals}")
+        if missing_vals > 0 or infinite_vals > 0:
+            print(f"Column '{col}' contains issues and should be handled.")
 
-# Step 3: Load datasets with Dask and persist intermediate results
-temperature_data = load_and_filter_data_dask("../data/NSW/aggregated_temperature_data.csv", ['Date', 'mean_temp'], 'Date')
-humidity_data = load_and_filter_data_dask("../data/NSW/aggregated_humidity_data.csv", ['Date', 'mean_humidity'], 'Date')
-wind_speed_data = load_and_filter_data_dask("../data/NSW/aggregated_windspeed_data.csv", ['Date', 'mean_windspeed'], 'Date')
-wind_direction_data = load_and_filter_data_dask("../data/NSW/aggregated_wind_direction_data.csv", ['Date', 'mean_wind_direction'], 'Date')
-solar_radiation_data = load_and_filter_data_dask("../data/NSW/aggregated_solar_radiation_data.csv", ['Date', 'mean_solar_radiation'], 'Date')
-enso_data = load_and_filter_data_dask("../data/NSW/daily_enso.csv", ['DATE', 'SOI'], 'DATE')
-soi_data = load_and_filter_data_dask("../data/NSW/soi_monthly.csv", ['yearmonth', 'soi'], 'yearmonth')
-
-# Step 4: Load energy demand and population forecast data
-energy_demand_data = load_and_filter_data_dask("../data/NSW/totaldemand_nsw.csv", ['DATETIME', 'TOTALDEMAND'], 'DATETIME')
-population_forecast_data = dd.read_csv("../data/NSW/PopulationForecastNSW.csv", usecols=['Year', 'Medium_Series'])
-
-# Step 5: Resample energy demand data and persist to disk
-energy_demand_data['DATETIME'] = dd.to_datetime(energy_demand_data['DATETIME'], errors='coerce', dayfirst=True)
-energy_demand_data = energy_demand_data.set_index('DATETIME').resample('D').mean()
-energy_demand_data = energy_demand_data.persist()
-energy_demand_data.to_parquet('./persisted_energy_demand_data.parquet', overwrite=True)
-
-# Step 6: Define function for merging datasets in chunks and persisting results
-def merge_datasets_in_chunks(left, right, on, how='outer'):
-    """Helper function to merge datasets without using iloc."""
-    return left.merge(right, on=on, how=how)
-
-# Step 7: Merge datasets and persist intermediate results
-enso_data = enso_data.rename(columns={'DATE': 'Date'})
-soi_data = soi_data.rename(columns={'yearmonth': 'Date'})
-
-merged_data = merge_datasets_in_chunks(temperature_data[['Date', 'mean_temp']],
-                                       humidity_data[['Date', 'mean_humidity']], 'Date')
-
-merged_data = merge_datasets_in_chunks(merged_data, wind_speed_data[['Date', 'mean_windspeed']], 'Date')
-merged_data = merge_datasets_in_chunks(merged_data, wind_direction_data[['Date', 'mean_wind_direction']], 'Date')
-merged_data = merge_datasets_in_chunks(merged_data, solar_radiation_data[['Date', 'mean_solar_radiation']], 'Date')
-merged_data = merge_datasets_in_chunks(merged_data, enso_data[['Date', 'SOI']], 'Date', how='left')
-merged_data = merge_datasets_in_chunks(merged_data, soi_data[['Date', 'soi']], 'Date', how='left')
-energy_demand_data = energy_demand_data.reset_index().rename(columns={'DATETIME': 'Date'})  # Adjusting index for merging
-merged_data = merge_datasets_in_chunks(merged_data, energy_demand_data[['Date', 'TOTALDEMAND']], 'Date', how='left')
-
-# Persist merged data
-merged_data = merged_data.persist()
-merged_data.to_parquet('./persisted_merged_data.parquet', overwrite=True)
-
-# Step 8: Merge with population forecast data
-population_forecast_data['Year'] = population_forecast_data['Year'].astype(int)
-merged_data['Year'] = dd.to_datetime(merged_data['Date']).dt.year
-merged_data = merged_data.merge(population_forecast_data, on='Year', how='left')
-merged_data['Medium_Series'] = merged_data['Medium_Series'].fillna(method='ffill')
-
-# Handle missing values
-merged_data = merged_data.fillna(method='ffill')
-merged_data = merged_data.fillna(method='bfill')
-
-# Persist final merged dataset
-merged_data = merged_data.persist()
-merged_data.to_parquet('./persisted_final_merged_data.parquet', overwrite=True)
-
-# Step 9: Create Lag Features
-def create_lag_features(df, column, lags):
-    for lag in lags:
-        df[f'{column}_lag_{lag}'] = df[column].shift(lag)
-    return df
-
-lags = [1, 24]
-merged_data = create_lag_features(merged_data, 'TOTALDEMAND', lags)
-merged_data = merged_data.dropna().persist()
-
-# Step 10: Convert to float32
-columns_to_convert = merged_data.columns.difference(['Date', 'Year', 'Medium_Series'])
-merged_data[columns_to_convert] = merged_data[columns_to_convert].astype(np.float32)
-
-# Step 11: Prepare for model training
-features = [
-    'mean_temp', 'mean_humidity', 'mean_windspeed', 'mean_wind_direction',
-    'mean_solar_radiation', 'SOI', 'Medium_Series', 'TOTALDEMAND_lag_1', 'TOTALDEMAND_lag_24'
+columns_to_check = [
+    'mean_temp', 'mean_humidity', 'mean_windspeed', 'TOTALDEMAND',
+    'enso', 'mean_solar_radiation', 'mean_wind_direction', 'rainfall', 'Population'
 ]
-X = merged_data[features].compute().values
-y = merged_data['TOTALDEMAND'].compute().values
+check_data_issues(preprocessed_data, columns_to_check)
 
-# Step 12: Split the data
+# Step 3: Prepare data for PyTorch model training
+# Use all relevant features for prediction
+features = [
+    'mean_temp', 'mean_humidity', 'mean_windspeed', 'enso', 'mean_solar_radiation',
+    'mean_wind_direction', 'rainfall', 'Population'
+]
+X = preprocessed_data[features].values
+y = preprocessed_data['TOTALDEMAND'].values
+
+# Step 4: Normalize the data to stabilize training
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Step 5: Split the data into training and test sets
 split_index = int(len(X) * 0.8)
 X_train, X_test = X[:split_index], X[split_index:]
 y_train, y_test = y[:split_index], y[split_index:]
 
-# Step 13: Move data to GPU using PyTorch
+# Step 6: Move data to GPU or CPU using PyTorch
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+
+# Convert data to tensors and move to the chosen device (CPU or GPU)
 X_train_tensor = torch.tensor(X_train, dtype=torch.float32).to(device)
 X_test_tensor = torch.tensor(X_test, dtype=torch.float32).to(device)
 y_train_tensor = torch.tensor(y_train, dtype=torch.float32).view(-1, 1).to(device)
 y_test_tensor = torch.tensor(y_test, dtype=torch.float32).view(-1, 1).to(device)
 
-# Step 14: Define the PyTorch Linear Regression model
+# Step 7: Define the PyTorch Linear Regression Model with Dropout and extra layers
 class LinearRegressionModel(nn.Module):
     def __init__(self, input_dim):
         super(LinearRegressionModel, self).__init__()
-        self.linear = nn.Linear(input_dim, 1)
+        self.layer1 = nn.Linear(input_dim, 256)  # Increased units
+        self.layer2 = nn.Linear(256, 128)  # Added complexity
+        self.layer3 = nn.Linear(128, 64)
+        self.layer4 = nn.Linear(64, 1)
+        self.dropout = nn.Dropout(p=0.3)  # Increased dropout
 
     def forward(self, x):
-        return self.linear(x)
+        x = torch.relu(self.layer1(x))
+        x = self.dropout(x)
+        x = torch.relu(self.layer2(x))
+        x = self.dropout(x)
+        x = torch.relu(self.layer3(x))
+        return self.layer4(x)
 
-# Step 15: Initialize model, optimizer, and loss function
+# Step 8: Initialize model, optimizer, and loss function with weight decay (L2 regularization)
 model = LinearRegressionModel(X_train_tensor.shape[1]).to(device)
-optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)  # Add L2 regularization
 loss_fn = nn.MSELoss()
 
-# Step 16: Train the model
-def train_model(model, X_train, y_train, optimizer, loss_fn, epochs=100):
+# Step 9: Initialize weights using Xavier initialization
+def init_weights(m):
+    if isinstance(m, nn.Linear):
+        torch.nn.init.xavier_uniform_(m.weight)
+
+model.apply(init_weights)
+
+# Step 10: Train the model with increased epochs, mini-batch gradient descent, and scheduler
+def train_model(model, X_train, y_train, optimizer, loss_fn, batch_size=64, epochs=500):
+    dataset = torch.utils.data.TensorDataset(X_train, y_train)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.1)  # Reduce learning rate every 50 epochs
+    
     model.train()
     for epoch in range(epochs):
-        optimizer.zero_grad()
-        y_pred = model(X_train)
-        loss = loss_fn(y_pred, y_train)
-        loss.backward()
-        optimizer.step()
+        for batch_X, batch_y in dataloader:
+            optimizer.zero_grad()
+            y_pred = model(batch_X)
+            loss = loss_fn(y_pred, batch_y)
+            loss.backward()
+            optimizer.step()
+        scheduler.step()  # Update the learning rate
         if epoch % 10 == 0:
             print(f'Epoch {epoch}/{epochs}, Loss: {loss.item()}')
 
-train_model(model, X_train_tensor, y_train_tensor, optimizer, loss_fn, epochs=100)
+train_model(model, X_train_tensor, y_train_tensor, optimizer, loss_fn, epochs=500)
 
-# Step 17: Evaluate the model
+# Step 11: Save the model
+model_save_path = '../data/NSW/saved_model.pth'  # Define where to save the model
+torch.save(model.state_dict(), model_save_path)
+print(f"Model saved to {model_save_path}")
+
+# Step 12: Evaluate the model
 model.eval()
 with torch.no_grad():
     y_pred_train = model(X_train_tensor)
     y_pred_test = model(X_test_tensor)
 
-    train_mse = nn.MSELoss()(y_pred_train, y_train_tensor).item()
-    test_mse = nn.MSELoss()(y_pred_test, y_test_tensor).item()
+    train_mse = loss_fn(y_pred_train, y_train_tensor).item()
+    test_mse = loss_fn(y_pred_test, y_test_tensor).item()
 
- 
     print(f'Train MSE: {train_mse}')
     print(f'Test MSE: {test_mse}')
 
-# 9. Plotting the results
+# Step 13: Plotting the results
 plt.figure(figsize=(10, 6))
 plt.plot(y_test_tensor.cpu().numpy()[:100], label='Actual')
 plt.plot(y_pred_test.cpu().numpy()[:100], label='Predicted')
-plt.title('Actual vs Predicted Energy Demand (Linear Regression with PyTorch)')
+plt.title('Actual vs Predicted Energy Demand (Tuned Linear Regression with PyTorch)')
 plt.legend()
 plt.show()
-
-# Close the Dask client
-client.close()
