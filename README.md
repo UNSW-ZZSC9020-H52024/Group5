@@ -9,15 +9,15 @@ Complete the information below regarding your group.
 ## Group and project information
 
 ### Group members and zIDs
-- Tom Woodley          (z5450185) - role
-- Tariq Khan           (z5414837) - role
-- Eugene Ho            (z5497345) - role
-- Majuwana Kariyawasam (z5398970) - role
+- Tom Woodley          (z5450185) - Group Leader
+- Tariq Khan           (z5414837) - Data Specialist and ML Engineer 
+- Eugene Ho            (z5497345) - Technical and Data Specialist
+- Majuwana Kariyawasam (z5398970) - Data Specialist and AI Engineer
 
 
 ### Brief project description
 
-This project aims to develop a robust energy demand forecasting model specifically for New South Wales (NSW), leveraging machine learning techniques and comprehensive data analysis. By integrating weather patterns, climate change impacts, air quality data, and population projections, the project seeks to accurately predict energy consumption in NSW. Through the application of advanced models like Random Forests, Gradient Boosting Machines, and Neural Networks, the project will explore the intricate relationships between environmental variables and energy demand. The outcome will provide valuable insights for energy suppliers, enabling more efficient energy production, distribution, and long-term planning in response to evolving climate conditions and demographic changes in NSW.
+This project aims to develop a robust energy demand forecasting model specifically for New South Wales (NSW), leveraging machine learning techniques and comprehensive data analysis. By integrating weather patterns, climate change impacts, and population projections, the project seeks to accurately predict energy consumption in NSW. Through the application of advanced models like Random Forests, Gradient Boosting Machines, and Neural Networks, the project will explore the intricate relationships between environmental variables and energy demand. There has been a gap in the current state of energy forecasting which does not take into account the El Nino Southern Oscillation. This project aims to expand the climate and environmental factors incorporated into forecast models by including two key indicators of this pattern. The outcome will provide valuable insights for energy suppliers, enabling more efficient energy production, distribution, and long-term planning in response to evolving climate conditions and demographic changes in NSW.
 
 
 
