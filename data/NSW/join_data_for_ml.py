@@ -73,6 +73,9 @@ join = pd.merge(join, rain, on='Date', how='left')
 join = pd.merge(join, pop, on='Date', how='left')
 join = pd.merge(join, demand, on='Date', how='left')
 
+join['DAYOFWEEK'] = join['Date'].dt.weekday
+join['DAYOFYEAR'] = join['Date'].dt.dayofyear
+
 #drop missing values
 join = join.dropna()
 
