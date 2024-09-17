@@ -3,7 +3,7 @@ import pandas as pd
 #enso
 enso = pd.read_csv('data/enso/daily_enso.csv', header=0)
 enso['Date'] = pd.to_datetime(enso['DATETIME'])
-enso.drop(columns=['DATETIME','SOI', 'SST_DIFF'], inplace=True)
+enso.drop(columns=['DATETIME','enso'], inplace=True)
 
 
 #humidity
