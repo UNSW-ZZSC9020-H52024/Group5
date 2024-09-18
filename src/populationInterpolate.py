@@ -43,11 +43,10 @@ population_data_monthly = population_data['Medium series'].resample('MS').interp
 # Yearly Interpolation (using 'YS' for year start to ensure full yearly coverage)
 population_data_yearly = population_data['Medium series'].resample('YS').interpolate('linear').ffill().bfill()
 
-# Check if any columns are empty (for daily, weekly, monthly, yearly)
-print("Daily population empty:", population_data_daily.isna().sum())
-print("Weekly population empty:", population_data_weekly.isna().sum())
-print("Monthly population empty:", population_data_monthly.isna().sum())
-print("Yearly population empty:", population_data_yearly.isna().sum())
+# Aggregate the daily, weekly, and monthly interpolations to yearly averages
+population_data_daily_yearly = population_data_daily.resample('YS').mean()
+population_data_weekly_yearly = population_data_weekly.resample('YS').mean()
+population_data_monthly_yearly = population_data_monthly.resample('YS').mean()
 
 # Create DataFrames with dates and populations for CSV export
 population_data_daily_df = pd.DataFrame({'Date': population_data_daily.index, 'Population': population_data_daily.values})
@@ -61,25 +60,38 @@ population_data_weekly_df.to_csv('../data/Population/population_forecast_linear_
 population_data_monthly_df.to_csv('../data/Population/population_forecast_linear_monthly.csv', index=False)
 population_data_yearly_df.to_csv('../data/Population/population_forecast_linear_yearly.csv', index=False)
 
+# Create DataFrames for aggregated yearly means
+aggregated_yearly_df = pd.DataFrame({
+    'Date': population_data_yearly.index,
+    'Aggregated Daily': population_data_daily_yearly.values,
+    'Aggregated Weekly': population_data_weekly_yearly.values,
+    'Aggregated Monthly': population_data_monthly_yearly.values,
+    'Yearly Interpolation': population_data_yearly.values
+})
 
-# Plot all forecasts for comparison
+# Save the aggregated yearly data to CSV files
+aggregated_yearly_df.to_csv('../data/Population/population_aggregated_yearly.csv', index=False)
+
+# Plot the comparison between aggregated values and yearly interpolation
 plt.figure(figsize=(12, 8))
 
-# Plot daily, weekly, monthly, and yearly interpolations
-plt.plot(population_data_daily_df['Date'], population_data_daily_df['Population'], label='Daily Interpolation', color='blue', linestyle='--')
-plt.plot(population_data_weekly_df['Date'], population_data_weekly_df['Population'], label='Weekly Interpolation', color='green', linestyle='--')
-plt.plot(population_data_monthly_df['Date'], population_data_monthly_df['Population'], label='Monthly Interpolation', color='orange', linestyle='--')
-plt.plot(population_data_yearly_df['Date'], population_data_yearly_df['Population'], label='Yearly Interpolation', color='red', linestyle='--')
+# Plot the aggregated daily, weekly, and monthly against the yearly interpolation
+plt.plot(aggregated_yearly_df['Date'], aggregated_yearly_df['Aggregated Daily'], label='Aggregated Daily', linestyle='--', color='blue', linewidth=1.5)
+plt.plot(aggregated_yearly_df['Date'], aggregated_yearly_df['Aggregated Weekly'], label='Aggregated Weekly', linestyle='-.', color='green', linewidth=1.5)
+plt.plot(aggregated_yearly_df['Date'], aggregated_yearly_df['Aggregated Monthly'], label='Aggregated Monthly', linestyle=':', color='purple', linewidth=2)
+plt.plot(aggregated_yearly_df['Date'], aggregated_yearly_df['Yearly Interpolation'], label='Yearly Interpolation', linestyle='-', color='red', linewidth=2.5)
 
 # Add labels and title
 plt.xlabel('Date')
 plt.ylabel('Population')
-plt.title('Population Forecast Comparison: Daily, Weekly, Monthly, and Yearly Interpolations (Linear)')
-plt.legend()
+plt.title('Validation of Yearly Forecast: Aggregated Daily, Weekly, Monthly vs Yearly Interpolation')
+
+# Add a legend
+plt.legend(loc='best')
 
 # Show the plot
 plt.grid(True)
 plt.show()
 
 # Display a success message
-print('Linear interpolation completed and CSV files for daily, weekly, monthly, and yearly forecasts have been created with each year starting on January 1.')
+print('Validation completed. Aggregated yearly means have been compared with yearly interpolation.')

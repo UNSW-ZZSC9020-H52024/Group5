@@ -17,7 +17,8 @@ historical_data_path = '../data/NSW/totaldemand_nsw.csv'  # Replace with actual 
 historical_data = pd.read_csv(historical_data_path)
 
 # Step 3: Extract 'Year' from 'DATETIME' in the historical data and sum the total demand by year
-historical_data['DATETIME'] = pd.to_datetime(historical_data['DATETIME'])
+# Use dayfirst=True to correctly parse day/month/year format
+historical_data['DATETIME'] = pd.to_datetime(historical_data['DATETIME'], dayfirst=True)
 historical_data['Year'] = historical_data['DATETIME'].dt.year
 historical_yearly_demand = historical_data.groupby('Year')['TOTALDEMAND'].sum().reset_index()
 
