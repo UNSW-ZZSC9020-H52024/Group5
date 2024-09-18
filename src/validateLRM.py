@@ -26,7 +26,7 @@ def load_and_aggregate_data():
 # Step 2: Prepare data for PyTorch model training
 def prepare_data_for_training(data):
     features = [
-        'mean_temp', 'mean_humidity', 'mean_windspeed', 'enso', 'mean_solar_radiation',
+        'mean_temp','SOI','SST_DIFF', 'mean_humidity', 'mean_windspeed', 'mean_solar_radiation',
         'mean_wind_direction', 'rainfall', 'Population', 'DAYOFWEEK', 'DAYOFYEAR'
     ]
     X = data[features].values
@@ -113,8 +113,8 @@ def evaluate_and_plot(model, X_test_tensor, y_test_tensor, daily_data, scaler, d
         y_pred_test = model(X_test_tensor).cpu().numpy()
 
         # Predict on full dataset
-        X_full = scaler.transform(daily_data[['mean_temp', 'mean_humidity', 'mean_windspeed',
-                                              'enso', 'mean_solar_radiation', 'mean_wind_direction',
+        X_full = scaler.transform(daily_data[['mean_temp','SOI','SST_DIFF', 'mean_humidity', 'mean_windspeed',
+                                               'mean_solar_radiation', 'mean_wind_direction',
                                               'rainfall', 'Population', 'DAYOFWEEK', 'DAYOFYEAR']].values)
         X_full_tensor = torch.tensor(X_full, dtype=torch.float32).to(device)
         y_pred_full = model(X_full_tensor).cpu().numpy()

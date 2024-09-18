@@ -32,15 +32,15 @@ def check_data_issues(data, columns):
             print(f"Column '{col}' contains issues and should be handled.")
 
 columns_to_check = [
-    'mean_temp', 'mean_humidity', 'mean_windspeed', 'TOTALDEMAND',
-    'enso', 'mean_solar_radiation', 'mean_wind_direction', 'rainfall', 'Population','DAYOFWEEK','DAYOFYEAR'
+    'mean_temp', 'SOI','SST_DIFF','mean_humidity', 'mean_windspeed', 'TOTALDEMAND',
+   'mean_solar_radiation', 'mean_wind_direction', 'rainfall', 'Population','DAYOFWEEK','DAYOFYEAR'
 ]
 check_data_issues(preprocessed_data, columns_to_check)
 
 # Step 3: Prepare data for PyTorch model training
 # Use all relevant features for prediction
 features = [
-    'mean_temp', 'mean_humidity', 'mean_windspeed', 'enso', 'mean_solar_radiation',
+    'mean_temp', 'SOI','SST_DIFF','mean_humidity', 'mean_windspeed',  'mean_solar_radiation',
     'mean_wind_direction', 'rainfall', 'Population','DAYOFWEEK','DAYOFYEAR'
 ]
 X = preprocessed_data[features].values

@@ -67,7 +67,7 @@ def main():
                 raise ValueError(f"TOTALDEMAND column is entirely NaN in {name}!")
 
     # Fill missing values for features
-    feature_columns = ['mean_temp', 'mean_humidity', 'mean_windspeed', 'enso', 'mean_solar_radiation',
+    feature_columns = ['mean_temp', 'SOI','SST_DIFF','mean_humidity', 'mean_windspeed','mean_solar_radiation',
     'mean_wind_direction', 'rainfall', 'Population','DAYOFWEEK','DAYOFYEAR']
     fill_missing_values(daily_data, feature_columns)
     fill_missing_values(weekly_aggregated, feature_columns)
@@ -89,7 +89,7 @@ def main():
             raise ValueError("The dataset is empty after handling TOTALDEMAND values. Check your data preprocessing.")
     
     # Normalize features
-    features = ['mean_temp', 'mean_humidity', 'mean_windspeed', 'enso', 'mean_solar_radiation',
+    features = ['mean_temp','SOI','SST_DIFF', 'mean_humidity', 'mean_windspeed','mean_solar_radiation',
     'mean_wind_direction', 'rainfall', 'Population','DAYOFWEEK','DAYOFYEAR']
     
     X_daily, scaler = normalize_features(daily_data, features)
