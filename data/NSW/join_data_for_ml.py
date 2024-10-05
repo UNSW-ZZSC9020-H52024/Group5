@@ -51,7 +51,6 @@ rain = rain.sort_values(by='Date', ascending=True)
 pop = pd.read_csv('data/Population/daily_pop_nsw.csv', header=0)
 pop['Date'] = pd.to_datetime(pop['Date'])
 pop = pop.sort_values(by='Date', ascending=True)
-#can someone help with deciding what to do with the population data? I'm not sure whether to model it as the same pop every day or to interpolate it for July 1st each year
 
 #TOTALDEMAND
 demand = pd.read_csv('data/NSW/totaldemand_nsw.csv', header=0)
