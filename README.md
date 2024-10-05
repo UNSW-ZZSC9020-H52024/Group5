@@ -32,3 +32,5 @@ The repository has the following folder structure:
 - minutes: minutes for each meeting (left not more than 24h after the corresponding meeting)
 - report: RMarkdown or Jupyter notebook report in progress
 - src: source code
+- For Exploratory Data Analysis use/run src/EDA_Final.ipynb 
+- For machine learning models for forecasting the demand  use/run src/Models_MG_Tom_copy.ipynb
